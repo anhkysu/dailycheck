@@ -197,7 +197,6 @@ export default class HelloWorldApp extends Component {
     .then((response) => response.json())
     .then((responseJson) => {
       console.log(`text: ${responseJson.feedback}`);
-      this.setState({textReceived:responseJson.feedback})
     })
     .catch((error) => {
       console.error(error);

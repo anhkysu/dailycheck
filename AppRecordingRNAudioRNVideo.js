@@ -21,7 +21,7 @@ class AudioExample extends Component {
       paused: false,
       stoppedRecording: false,
       finished: false,
-      audioPath: AudioUtils.MusicDirectoryPath + '/test.3gpp',
+      audioPath: AudioUtils.DocumentDirectoryPath + '/test.3gpp',
       hasPermission: undefined,
     };
 

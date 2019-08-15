@@ -30,8 +30,6 @@ import {
 import Sound from 'react-native-sound';
 import {AudioRecorder, AudioUtils} from 'react-native-audio';
 
-import RNFetchBlob from 'rn-fetch-blob';
-
 export default class HelloWorldApp extends Component {
   state = {
     currentTime: 0.0,
@@ -41,8 +39,6 @@ export default class HelloWorldApp extends Component {
     finished: false,
     audioPath: AudioUtils.DocumentDirectoryPath + '/test.3gpp',
     hasPermission: undefined,
-    readthistext: "Mình đã thành công chưa nhỉ",
-    textReceived: "Chưa nghe được"
   };
 
   prepareRecordingPath(audioPath){
@@ -180,106 +176,6 @@ export default class HelloWorldApp extends Component {
     console.log(`Finished recording of duration ${this.state.currentTime} seconds at path: ${filePath} and size of ${fileSize || 0} bytes`);
   }
 
-  async _FetchTextFromGoogleMother(audioPath){
-    //const audioBytes = RNFetchBlob.fs.readFile(audioPath,'base64');
-    var requesthere = await this._PrepareToFetchText(audioPath);
-    fetch('https://stmiddleserver.herokuapp.com/handle', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        audio: requesthere.audio,
-        config: requesthere.config
-      })
-    })
-    .then((response) => response.json())
-    .then((responseJson) => {
-      console.log(`text: ${responseJson.feedback}`);
-      this.setState({textReceived:responseJson.feedback})
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-  }
-
-  async _PrepareToFetchText(audioPath){
-    var audioBytes;
-    await RNFetchBlob.fs.readFile(audioPath, 'base64')
-      .then((content) => {audioBytes = content})
-      .catch((err) => { console.log(err) });
-    //console.log(audioBytes);
-    const audio = {
-      content: audioBytes
-    };
-    const config = {
-      encoding: 'LINEAR16',
-      sampleRateHertz: 22050,
-      languageCode: 'vi-VN',
-    };
-    const requestwithtext = {
-      audio: audio,
-      config: config
-    };
-    return requestwithtext
-  }
-
-  _FetchVoiceFromGoogleMother(textInput){
-    console.log(textInput);
-    fetch('https://stmiddleserver.herokuapp.com/givemevoice', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        readthistext: textInput
-      }),
-    })
-    .then((response) => response.json())
-    .then((responseJson) => {
-      console.log(responseJson.feedback);
-      this._HandleVoiceRawDataFeedback(responseJson.feedback);
-      return responseJson.feedback;
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-  }
-
-  _HandleVoiceRawDataFeedback(rawAudioData){
-    try{
-      RNFetchBlob.fs.writeFile(AudioUtils.DocumentDirectoryPath + '/mymp3.mp3', rawAudioData, 'base64')
-    }
-    catch(error){console.log(error)}
-    
-    //const writeFile = util.promisify(fs.writeFile);
-    //writeFile('output.mp3', audio, 'binary');
-    console.log(`Audio Path: ${AudioUtils.DocumentDirectoryPath + '/mymp3.mp3'}`);
-    this._PlayGoogle();
-  }
-
-  _PlayGoogle(){
-    setTimeout(() => {
-      var sound1 = new Sound(AudioUtils.DocumentDirectoryPath + '/mymp3.mp3', '', (error) => {
-        if (error) {
-          console.log('failed to load the sound', error);
-        }
-      });
-
-      setTimeout(() => {
-        sound1.play((success) => {
-          if (success) {
-            console.log('successfully finished playing');
-          } else {
-            console.log('playback failed due to audio decoding errors');
-          }
-        });
-      }, 100);
-    }, 100);
-  }
-
   render() {
     return (
       <View style={{ backgroundColor: "black", flex: 1 }}>
@@ -289,15 +185,15 @@ export default class HelloWorldApp extends Component {
                 style={{flex: 1,  backgroundColor: "white", padding: 20}}
                 multiline={true}
                 ref={input => this.mytextinput = input}
-                placeholder={"Gõ chữ tiếng việt vô đây rồi bấm nút ở dưới nhá! Bấm từ từ thôi, không là lỗi đó :)"}
-                onChangeText={(text)=>{this.setState({readthistext:text})}}
+                placeholder={"Gõ chữ tiếng việt vô đây rồi bấm nút ở dưới nhá!"}
+                placeholderStyle={{ fontFamily: "Roboto", borderColor: 'whitesmoke', margin: 15}}
                 placeholderTextColor={'steelblue'}
                 //onChangeText={(text) => this.setState({text})}
                 //value={this.state.text}
               />
           </View>
           <View style={{height: 100, backgroundColor: "gray", alignItems: "center", justifyContent: "center"}}>
-            <TouchableOpacity onPress={()=>{this.mytextinput.blur(); this._FetchVoiceFromGoogleMother(this.state.readthistext);}}>
+            <TouchableOpacity onPress={()=>{this.mytextinput.blur(); this._play();}}>
               <Text style={{ fontFamily: "Roboto", fontSize: 25, color: "white" }}>
                  SPEAK ALOUD TEXT HERE
               </Text>
@@ -307,25 +203,13 @@ export default class HelloWorldApp extends Component {
       <View style={{ backgroundColor: "steelblue", flex: 1 }}>
         <View style={{ flexDirection: "row", height: 100,alignItems: "center", justifyContent: "center", padding: 10}}>
           
-            <TouchableOpacity style={{marginHorizontal: 10}} onPress={()=>{this._record()}}>
+            <TouchableOpacity style={{marginHorizontal: 30}} onPress={()=>{this._record();}}>
               <Text style={{fontFamily: "Roboto", fontSize: 25, color: "white"}}>
                   RECORD
               </Text>
             </TouchableOpacity>
-
-            <TouchableOpacity style={{marginHorizontal: 10}} onPress={()=>{this._stop()}}>
-              <Text style={{fontFamily: "Roboto", fontSize: 25, color: "white"}}>
-                  STOP
-              </Text>
-            </TouchableOpacity>
         
-            <TouchableOpacity style={{marginHorizontal: 10}} onPress={()=>{this._play()}}>
-              <Text style={{fontFamily: "Roboto", fontSize: 25, color: "white"}}>
-                  PLAY
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={{marginHorizontal: 10}} onPress={()=>{this._FetchTextFromGoogleMother(AudioUtils.DocumentDirectoryPath + '/mymp3.mp3');}}>
+            <TouchableOpacity style={{marginHorizontal: 30}} onPress={()=>{this._stop();}}>
               <Text style={{fontFamily: "Roboto", fontSize: 25, color: "white"}}>
                   ANALYZE
               </Text>
@@ -342,7 +226,7 @@ export default class HelloWorldApp extends Component {
         <View style={{padding: 10, height: 150, marginTop: 20}}>
           <View style={{ borderRadius: 10, backgroundColor:"lightblue", flex: 1, padding: 20}}>
                 <Text style={{fontFamily: "monospace", color: "gray"}}>
-                   Tôi nghe được: {this.state.textReceived}
+                   Tôi đang tự hỏi
                 </Text>
           </View>
         </View>

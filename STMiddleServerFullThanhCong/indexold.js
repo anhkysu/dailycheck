@@ -52,17 +52,18 @@ app.post('/givemevoice', (req, res) => {
 
 // HTTP stuff
 app.post('/handle', (req, res) => {
-    //console.log(`data:${req.body.audio}`);
+    //console.log(`data:${req.body}`);
     const audio = req.body.audio;
     const config = req.body.config;
     const requestt = {
         audio: audio,
         config: config,
       };
-    console.log(requestt);
+    //console.log(requestt);
     SendToGoogle(requestt).then((result)=>{ res.send(JSON.stringify({feedback:`${result}`}));}).catch((error) => {console.error(error)});
+   
 });
 
-app.get('/taiapp', (req, res) => res.sendFile(path.resolve(__dirname, './appandroid.apk')));
+app.get('/client', (req, res) => res.sendFile(path.resolve(__dirname, './appandroid.apk')));
 app.get('/streamer', (req, res) => res.sendFile(path.resolve(__dirname, './streamer.html')));
 app.listen(HTTP_PORT, () => console.log(`HTTP server listening at http://localhost:${HTTP_PORT}`));
